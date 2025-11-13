@@ -54,7 +54,11 @@
           <p class="cp-item">@ {{ mon.item }}</p>
           {% endif %}
 
-          <p class="cp-ability">Ability: {{ mon.ability or "—" }}</p>
+            <p class="cp-ability"
+               onmouseenter="showAbilityTooltip('{{ mon.ability|lower }}')"
+               onmouseleave="hideAbilityTooltip()">
+               Ability: {{ mon.ability or "—" }}
+            </p>
         </div>
       </div>
 
@@ -117,12 +121,30 @@
 </section>
 
 <style>
-/* EVs + IVs same size */
-.stat-fixed {
-  width: 140px;
-  min-height: 160px;
+
+.cp-stat-pair {
+  display: flex;
+  gap: 14px;
+  width: 100%;
 }
 
+.cp-stat-grid {
+  flex: 1; /* <-- THIS makes each box take half */
+  min-height: 160px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba(255,255,255,0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-stat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  padding: 2px 0;
+}
 /* Keep EVs & IVs side by side */
 .cp-stat-pair {
   display: flex;
@@ -218,6 +240,7 @@
 
 <!-- TOOLTIP CONTAINER -->
 <div id="moveTooltip" class="move-tooltip"></div>
+<div id="abilityTooltip" class="move-tooltip"></div>
 
 <script>
 let MOVES = {};
@@ -227,11 +250,25 @@ fetch("/static/data/moves.json")
   .then(r => r.json())
   .then(data => MOVES = data);
 
+let ABILITIES = {};
+
+fetch("/static/data/abilities.json")
+  .then(r => r.json())
+  .then(data => ABILITIES = data);
+
+
 // Suivi de la souris
 document.addEventListener("mousemove", (e) => {
-  const tooltip = document.getElementById("moveTooltip");
-  tooltip.style.left = (e.clientX + 12) + "px";
-  tooltip.style.top = (e.clientY + 12) + "px";
+  const moveTooltip = document.getElementById("moveTooltip");
+  const abilityTooltip = document.getElementById("abilityTooltip");
+
+  // Move tooltip
+  moveTooltip.style.left = (e.clientX + 12) + "px";
+  moveTooltip.style.top = (e.clientY + 12) + "px";
+
+  // Ability tooltip
+  abilityTooltip.style.left = (e.clientX + 12) + "px";
+  abilityTooltip.style.top = (e.clientY + 12) + "px";
 });
 
 // 🔥 Normalisation des noms pour correspondre aux IDs Showdown
@@ -240,6 +277,37 @@ function normalizeMoveName(name) {
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");  // enlève espaces, -, ', etc.
 }
+
+function normalizeAbilityName(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function showAbilityTooltip(abilityName) {
+  const tooltip = document.getElementById("abilityTooltip");
+
+  const id = normalizeAbilityName(abilityName);
+
+  if (!ABILITIES[id]) {
+    tooltip.style.display = "none";
+    return;
+  }
+
+  const a = ABILITIES[id];
+
+  tooltip.innerHTML = `
+    <div class="move-tooltip-title">${a.name}</div>
+    <div style="opacity:0.85;">${a.shortDesc ?? "No description."}</div>
+  `;
+
+  tooltip.style.display = "block";
+}
+
+function hideAbilityTooltip() {
+  document.getElementById("abilityTooltip").style.display = "none";
+}
+
 
 // Afficher tooltip
 function showMoveTooltip(moveName) {
