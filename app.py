@@ -18,7 +18,7 @@ from parser import parse_showdown_team
 
 def create_app():
     app = Flask(__name__)
-
+    app.config["PREFERRED_URL_SCHEME"] = "https"
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-prod")
 
     if "DATABASE_URL" in os.environ:
