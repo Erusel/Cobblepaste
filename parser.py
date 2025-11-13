@@ -14,16 +14,18 @@ def normalise_sprite_name(species: str) -> str:
 
 
 def parse_evs_or_ivs(line: str) -> Dict[str, int]:
-    # line: "EVs: 252 SpA / 4 SpD / 252 Spe"
+    # "EVs: 252 SpA / 4 SpD / 252 Spe"
     _, values = line.split(":", 1)
     parts = [p.strip() for p in values.split("/") if p.strip()]
     result: Dict[str, int] = {}
+
     for part in parts:
         match = re.match(r"(\d+)\s+(.+)", part)
         if match:
             value = int(match.group(1))
             stat = match.group(2)
             result[stat] = value
+
     return result
 
 
@@ -32,9 +34,28 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     if not lines:
         return {}
 
-    first = lines[0]
+    # --- CLEAN FIRST LINE OF BLOCK (remove .RS etc inside nickname/species) ---
+    header = lines[0].lstrip()
 
+    # remove leading dot-commands like ".RS Team", ".rv lead", ".S test"
+    if header.lower().startswith(".rs "):
+        header = header[4:].lstrip()
+    elif header.lower().startswith(".rv "):
+        header = header[4:].lstrip()
+    elif header.lower().startswith(".s "):
+        header = header[3:].lstrip()
+    elif header.startswith("."):
+        # generic fallback: remove first word beginning with "."
+        parts = header.split(" ", 1)
+        if len(parts) > 1:
+            header = parts[1].lstrip()
+
+    lines[0] = header  # update header
+
+    # --- ITEM SPLIT ---
+    first = lines[0]
     item = None
+
     if "@" in first:
         left, item = first.split("@", 1)
         left = left.strip()
@@ -42,16 +63,18 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     else:
         left = first.strip()
 
+    # --- NICKNAME / SPECIES ---
     nickname = None
     species = None
 
-    # "Nickname (Species)" vs "Species"
+    # Format: Nick (Species)
     if "(" in left and left.endswith(")"):
         nickname = left.split("(", 1)[0].strip()
         species = left[left.find("(") + 1 : -1].strip()
     else:
         species = left
 
+    # --- Stats ---
     ability = None
     nature = None
     tera_type = None
@@ -62,17 +85,21 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     for line in lines[1:]:
         if line.startswith("Ability:"):
             ability = line.split(":", 1)[1].strip()
+
         elif line.startswith("EVs:"):
             evs = parse_evs_or_ivs(line)
+
         elif line.startswith("IVs:"):
             ivs = parse_evs_or_ivs(line)
+
         elif line.startswith("Tera Type:"):
             tera_type = line.split(":", 1)[1].strip()
+
         elif line.endswith("Nature"):
             nature = line.replace("Nature", "").strip()
+
         elif line.startswith("- "):
             moves.append(line[2:].strip())
-        # You could add more parsing (level, gender, etc.) if needed
 
     return {
         "nickname": nickname,
@@ -90,16 +117,21 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
 
 def parse_showdown_team(paste: str) -> List[Dict[str, Any]]:
     cleaned_lines = []
+
     for line in paste.splitlines():
         stripped = line.strip()
+
+        # remove blank dot-commands
         if stripped.startswith(".") and len(stripped) <= 4:
-            # Ignore tiny commands like ".RS"
             continue
+
         cleaned_lines.append(line)
 
     cleaned = "\n".join(cleaned_lines)
 
+    # split Pokémon blocks by blank lines
     blocks = re.split(r"\n\s*\n", cleaned.strip())
+
     team: List[Dict[str, Any]] = []
 
     for block in blocks:
