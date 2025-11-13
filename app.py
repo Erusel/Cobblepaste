@@ -90,7 +90,7 @@ def create_app():
         db.session.commit()
 
         # Redirect to the pretty view
-        return redirect(url_for("view_paste", slug=slug))
+        return redirect(url_for("view_paste", slug=slug, _external=True, _scheme="https"))
 
     @app.post("/api/create")
     def api_create_paste():
@@ -132,7 +132,7 @@ def create_app():
         return {
             "success": True,
             "slug": slug,
-            "url": url_for("view_paste", slug=slug, _external=True),
+            "url": url_for("view_paste", slug=slug, _external=True, _scheme="https"),
         }, 200
 
 
