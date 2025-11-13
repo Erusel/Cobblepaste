@@ -135,6 +135,17 @@ def parse_showdown_team(paste: str) -> List[Dict[str, Any]]:
     team: List[Dict[str, Any]] = []
 
     for block in blocks:
+        # Skip blocks that are just labels or garbage like ".rs Veil Team"
+        first_line = block.strip().split("\n", 1)[0].strip()
+
+        # skip if it begins with a dot-command
+        if first_line.startswith("."):
+            continue
+
+        # skip if it contains no item, no ability, no nature, no dash lines
+        if ("@" not in block) and ("Ability:" not in block) and ("Nature" not in block):
+            continue
+
         mon = parse_pokemon_block(block)
         if mon.get("species"):
             team.append(mon)
