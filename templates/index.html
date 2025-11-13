@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Cobblepaste – New Team{% endblock %}
+
+{% block content %}
+<section class="cp-card">
+  <h1>Create a new Cobblepaste</h1>
+  <form method="post" action="{{ url_for('create_paste') }}" class="cp-form">
+    <div class="cp-field">
+      <label for="title">Title</label>
+      <input type="text" id="title" name="title" placeholder="Fun BO3 ladder team" />
+    </div>
+
+    <div class="cp-field">
+      <label for="author">Author</label>
+      <input type="text" id="author" name="author" placeholder="IGN / Smogon name" />
+    </div>
+
+    <div class="cp-field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="3" placeholder="Gameplan, matchup notes, tech explanations..."></textarea>
+    </div>
+
+    <div class="cp-field">
+      <label for="paste">Pokémon Showdown paste</label>
+      <textarea id="paste" name="paste" rows="14"
+        placeholder="Paste your Showdown team text here..."></textarea>
+    </div>
+
+    <button type="submit" class="cp-button">Create Cobblepaste</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ paste.title }} – Cobblepaste{% endblock %}
+
+{% block content %}
+<section class="cp-card">
+  <header class="cp-paste-header">
+    <div>
+      <h1>{{ paste.title }}</h1>
+      <p class="cp-meta">
+        by <strong>{{ paste.author }}</strong> •
+        created {{ paste.created_at.strftime("%Y-%m-%d") }}
+      </p>
+    </div>
+    <div class="cp-link">
+      <span>Share URL:</span>
+      <code>{{ request.url }}</code>
+    </div>
+  </header>
+
+  {% if paste.notes %}
+  <section class="cp-notes">
+    <h2>Notes</h2>
+    <p>{{ paste.notes | e | replace('\n','<br>')|safe }}</p>
+  </section>
+  {% endif %}
+
+  <section class="cp-team-grid">
+    {% for mon in team %}
+    <article class="cp-mon-card">
+      <div class="cp-mon-header">
+        <img
+          class="cp-mon-sprite"
+          src="https://cobblemon.tools/pokedex/pokemon/{{ mon.sprite_name }}/sprite.png"
+          alt="{{ mon.species }}"
+          onerror="this.style.display='none';"
+        />
+        <div>
+          <h2>
+            {% if mon.nickname %}
+              {{ mon.nickname }} <span class="cp-species">({{ mon.species }})</span>
+            {% else %}
+              {{ mon.species }}
+            {% endif %}
+          </h2>
+          {% if mon.item %}
+          <p class="cp-item">@ {{ mon.item }}</p>
+          {% endif %}
+          <p class="cp-ability">Ability: {{ mon.ability or "—" }}</p>
+        </div>
+      </div>
+
+      <div class="cp-mon-body">
+        <div class="cp-mon-stats">
+          {% if mon.nature %}
+          <p><strong>Nature:</strong> {{ mon.nature }}</p>
+          {% endif %}
+          {% if mon.tera_type %}
+          <p><strong>Tera Type:</strong> {{ mon.tera_type }}</p>
+          {% endif %}
+
+          {% if mon.evs %}
+          <p><strong>EVs:</strong>
+            {% for stat, value in mon.evs.items() %}
+              {{ value }} {{ stat }}{% if not loop.last %} /{% endif %}
+            {% endfor %}
+          </p>
+          {% endif %}
+
+          {% if mon.ivs %}
+          <p><strong>IVs:</strong>
+            {% for stat, value in mon.ivs.items() %}
+              {{ value }} {{ stat }}{% if not loop.last %} /{% endif %}
+            {% endfor %}
+          </p>
+          {% endif %}
+        </div>
+
+        <ul class="cp-moves">
+          {% for move in mon.moves %}
+          <li>{{ move }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </article>
+    {% endfor %}
+  </section>
+</section>
+{% endblock %}
