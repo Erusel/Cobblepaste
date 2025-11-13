@@ -3,6 +3,7 @@ import json
 import secrets
 import string
 import datetime as dt
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from flask import (
     Flask,
@@ -19,6 +20,7 @@ from parser import parse_showdown_team
 def create_app():
     app = Flask(__name__)
     app.config["PREFERRED_URL_SCHEME"] = "https"
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "change-me-in-prod")
 
     if "DATABASE_URL" in os.environ:
