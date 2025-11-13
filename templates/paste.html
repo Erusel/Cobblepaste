@@ -57,9 +57,7 @@
       </div>
 
       <div class="cp-mon-body">
-
         <div class="cp-mon-stats">
-
           {% if mon.nature %}
           <p><strong>Nature:</strong> {{ mon.nature }}</p>
           {% endif %}
@@ -94,12 +92,13 @@
           {% endif %}
         </div>
 
-        <!-- BEAUTIFUL MOVES RENDERING -->
+        <!-- CLEAN, NON-STRETCHY MOVE TAGS -->
         <div class="cp-move-list">
           {% for move in mon.moves %}
           <span class="cp-move-tag">{{ move }}</span>
           {% endfor %}
         </div>
+
       </div>
     </article>
     {% endfor %}
@@ -107,6 +106,14 @@
 </section>
 
 <style>
+/* make body layout not stretch children vertically */
+.cp-mon-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;   /* important: no vertical stretching */
+  gap: 12px;
+}
+
 .cp-stat-grid {
   margin-top: 8px;
   border: 1px solid rgba(255,255,255,0.1);
@@ -139,15 +146,18 @@
   font-weight: 600;
 }
 
-/* NEW: Beautiful pill-style moves */
+/* moves: compact inline chips that DON'T fill the whole column */
 .cp-move-list {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 6px;
-  margin-top: 12px;
+  margin-top: 6px;
 }
 
 .cp-move-tag {
+  display: inline-flex;              /* size to content */
+  align-items: center;
   padding: 3px 8px;
   font-size: 0.78rem;
   font-weight: 500;
@@ -156,6 +166,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 6px;
   white-space: nowrap;
+  line-height: 1.2;
   transition: 0.15s ease-in-out;
 }
 
