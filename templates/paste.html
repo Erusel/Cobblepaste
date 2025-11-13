@@ -11,14 +11,16 @@
         created {{ paste.created_at.strftime("%Y-%m-%d") }}
       </p>
     </div>
-        {% if paste.competitive_mode %}
+
+    {% if paste.competitive_mode %}
     <div class="cp-competitive-badge">
-        Competitive Mode enabled — EVs & IVs hidden
+      Competitive Mode enabled — EVs & IVs hidden
     </div>
-        {% endif %}
+    {% endif %}
+
     <div class="cp-link" onclick="copyShareLink()">
-        <span>Share URL:</span>
-        <code id="share-url">{{ request.url }}</code>
+      <span>Share URL:</span>
+      <code id="share-url">{{ request.url }}</code>
     </div>
   </header>
 
@@ -55,7 +57,9 @@
       </div>
 
       <div class="cp-mon-body">
+
         <div class="cp-mon-stats">
+
           {% if mon.nature %}
           <p><strong>Nature:</strong> {{ mon.nature }}</p>
           {% endif %}
@@ -63,21 +67,32 @@
           <p><strong>Tera Type:</strong> {{ mon.tera_type }}</p>
           {% endif %}
 
-          {% if not paste.competitive_mode and mon.evs %}
-          <p><strong>EVs:</strong>
+          {% if not paste.competitive_mode %}
+          {% if mon.evs %}
+          <div class="cp-stat-grid">
+            <p class="cp-stat-title">EVs</p>
             {% for stat, value in mon.evs.items() %}
-              {{ value }} {{ stat }}{% if not loop.last %} /{% endif %}
+            <div class="cp-stat-row">
+              <span class="cp-stat-name">{{ stat }}</span>
+              <span class="cp-stat-value">{{ value }}</span>
+            </div>
             {% endfor %}
-          </p>
+          </div>
           {% endif %}
 
-          {% if not paste.competitive_mode and mon.ivs %}
-          <p><strong>IVs:</strong>
+          {% if mon.ivs %}
+          <div class="cp-stat-grid">
+            <p class="cp-stat-title">IVs</p>
             {% for stat, value in mon.ivs.items() %}
-              {{ value }} {{ stat }}{% if not loop.last %} /{% endif %}
+            <div class="cp-stat-row">
+              <span class="cp-stat-name">{{ stat }}</span>
+              <span class="cp-stat-value">{{ value }}</span>
+            </div>
             {% endfor %}
-          </p>
+          </div>
           {% endif %}
+          {% endif %}
+
         </div>
 
         <ul class="cp-moves">
@@ -85,11 +100,47 @@
           <li>{{ move }}</li>
           {% endfor %}
         </ul>
+
       </div>
     </article>
     {% endfor %}
   </section>
 </section>
+
+<style>
+.cp-stat-grid {
+  margin-top: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+}
+
+.cp-stat-title {
+  font-weight: 600;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #8ecaff;
+  letter-spacing: 0.5px;
+}
+
+.cp-stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 0.85rem;
+}
+
+.cp-stat-name {
+  opacity: 0.85;
+}
+
+.cp-stat-value {
+  font-weight: 600;
+}
+</style>
+
 <script>
 function copyShareLink() {
     const urlText = document.getElementById("share-url").innerText;
@@ -104,4 +155,5 @@ function copyShareLink() {
     });
 }
 </script>
+
 {% endblock %}
