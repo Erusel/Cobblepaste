@@ -11,9 +11,14 @@
         created {{ paste.created_at.strftime("%Y-%m-%d") }}
       </p>
     </div>
-    <div class="cp-link">
-      <span>Share URL:</span>
-      <code>{{ request.url }}</code>
+        {% if paste.competitive_mode %}
+    <div class="cp-competitive-badge">
+        Competitive Mode enabled — EVs & IVs hidden
+    </div>
+        {% endif %}
+    <div class="cp-link" onclick="copyShareLink()">
+        <span>Share URL:</span>
+        <code id="share-url">{{ request.url }}</code>
     </div>
   </header>
 
@@ -58,7 +63,7 @@
           <p><strong>Tera Type:</strong> {{ mon.tera_type }}</p>
           {% endif %}
 
-          {% if mon.evs %}
+          {% if not paste.competitive_mode and mon.evs %}
           <p><strong>EVs:</strong>
             {% for stat, value in mon.evs.items() %}
               {{ value }} {{ stat }}{% if not loop.last %} /{% endif %}
@@ -66,7 +71,7 @@
           </p>
           {% endif %}
 
-          {% if mon.ivs %}
+          {% if not paste.competitive_mode and mon.ivs %}
           <p><strong>IVs:</strong>
             {% for stat, value in mon.ivs.items() %}
               {{ value }} {{ stat }}{% if not loop.last %} /{% endif %}
@@ -85,4 +90,18 @@
     {% endfor %}
   </section>
 </section>
+<script>
+function copyShareLink() {
+    const urlText = document.getElementById("share-url").innerText;
+
+    navigator.clipboard.writeText(urlText).then(() => {
+        const codeEl = document.getElementById("share-url");
+        codeEl.classList.add("copied");
+
+        setTimeout(() => {
+            codeEl.classList.remove("copied");
+        }, 800);
+    });
+}
+</script>
 {% endblock %}

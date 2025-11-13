@@ -15,6 +15,7 @@ class Paste(db.Model):
     raw_paste = db.Column(db.Text, nullable=False)
     team_json = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=dt.datetime.utcnow)
+    competitive_mode = db.Column(db.Boolean, default=False)
 
     def __repr__(self) -> str:
         return f"<Paste {self.slug}>"

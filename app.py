@@ -60,6 +60,7 @@ def create_app():
         title = request.form.get("title", "").strip() or "Untitled team"
         author = request.form.get("author", "").strip() or "Anonymous"
         notes = request.form.get("notes", "").strip()
+        competitive_mode = request.form.get("competitive_mode") == "on"
         raw_paste = request.form.get("paste", "").strip()
 
         if not raw_paste:
@@ -82,6 +83,7 @@ def create_app():
             notes=notes,
             raw_paste=raw_paste,
             team_json=json.dumps(team),
+            competitive_mode=competitive_mode,
             created_at=dt.datetime.utcnow(),
         )
         db.session.add(paste)
