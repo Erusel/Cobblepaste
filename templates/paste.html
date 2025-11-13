@@ -102,7 +102,9 @@
         <!-- MOVES IN 2x2 GRID -->
         <div class="cp-move-grid">
           {% for move in mon.moves %}
-          <div class="cp-move-cell">
+          <div class="cp-move-cell"
+               onmouseenter="showMoveTooltip('{{ move|lower }}')"
+               onmouseleave="hideMoveTooltip()">
             {{ move }}
           </div>
           {% endfor %}
@@ -185,9 +187,91 @@
   flex-direction: column;
   gap: 12px;
 }
+
+/* TOOLTIP */
+.move-tooltip {
+  position: fixed;
+  background: rgba(10,10,14,0.92);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.82rem;
+  pointer-events: none;
+  max-width: 240px;
+  z-index: 9999;
+  display: none;
+}
+
+.move-tooltip-title {
+  font-weight: 700;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+#moveTooltip {
+  position: fixed; /* IMPORTANT */
+  pointer-events: none;
+  z-index: 99999;
+}
 </style>
 
+
+<!-- TOOLTIP CONTAINER -->
+<div id="moveTooltip" class="move-tooltip"></div>
+
 <script>
+let MOVES = {};
+
+// Charge moves.json
+fetch("/static/data/moves.json")
+  .then(r => r.json())
+  .then(data => MOVES = data);
+
+// Suivi de la souris
+document.addEventListener("mousemove", (e) => {
+  const tooltip = document.getElementById("moveTooltip");
+  tooltip.style.left = (e.clientX + 12) + "px";
+  tooltip.style.top = (e.clientY + 12) + "px";
+});
+
+// 🔥 Normalisation des noms pour correspondre aux IDs Showdown
+function normalizeMoveName(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");  // enlève espaces, -, ', etc.
+}
+
+// Afficher tooltip
+function showMoveTooltip(moveName) {
+  const tooltip = document.getElementById("moveTooltip");
+
+  // NEW → convertir nom affiché → ID interne Showdown
+  const id = normalizeMoveName(moveName);
+
+  if (!MOVES || !MOVES[id]) {
+    tooltip.style.display = "none";
+    return;
+  }
+
+  const m = MOVES[id];
+
+  tooltip.innerHTML = `
+    <div class="move-tooltip-title">${m.name}</div>
+    <div><strong>Type:</strong> ${m.type}</div>
+    <div><strong>Category:</strong> ${m.category}</div>
+    <div><strong>Power:</strong> ${m.basePower ?? "—"}</div>
+    <div><strong>Accuracy:</strong> ${m.accuracy ?? "—"}</div>
+    <div style="margin-top:6px; opacity:0.85;">${m.shortDesc ?? ""}</div>
+  `;
+  tooltip.style.display = "block";
+}
+
+// Masquer tooltip
+function hideMoveTooltip() {
+  document.getElementById("moveTooltip").style.display = "none";
+}
+
+// Copie lien
 function copyShareLink() {
     const urlText = document.getElementById("share-url").innerText;
     navigator.clipboard.writeText(urlText).then(() => {
