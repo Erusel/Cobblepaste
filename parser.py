@@ -14,7 +14,6 @@ def normalise_sprite_name(species: str) -> str:
 
 
 def parse_evs_or_ivs(line: str) -> Dict[str, int]:
-    # "EVs: 252 SpA / 4 SpD / 252 Spe"
     _, values = line.split(":", 1)
     parts = [p.strip() for p in values.split("/") if p.strip()]
     result: Dict[str, int] = {}
@@ -34,28 +33,24 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     if not lines:
         return {}
 
-    # --- CLEAN FIRST LINE OF BLOCK (remove .RS etc inside nickname/species) ---
+    # CLEAN HEADER (.rs, .rv, .s etc.)
     header = lines[0].lstrip()
+    if header.startswith("."):
+        return {}  # hard skip any command header
 
-    # remove leading dot-commands like ".RS Team", ".rv lead", ".S test"
+    # Strip leading dot-tags inside nickname
     if header.lower().startswith(".rs "):
         header = header[4:].lstrip()
-    elif header.lower().startswith(".rv "):
+    if header.lower().startswith(".rv "):
         header = header[4:].lstrip()
-    elif header.lower().startswith(".s "):
+    if header.lower().startswith(".s "):
         header = header[3:].lstrip()
-    elif header.startswith("."):
-        # generic fallback: remove first word beginning with "."
-        parts = header.split(" ", 1)
-        if len(parts) > 1:
-            header = parts[1].lstrip()
 
-    lines[0] = header  # update header
+    lines[0] = header
 
-    # --- ITEM SPLIT ---
-    first = lines[0]
+    # ITEM
     item = None
-
+    first = lines[0]
     if "@" in first:
         left, item = first.split("@", 1)
         left = left.strip()
@@ -63,18 +58,16 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     else:
         left = first.strip()
 
-    # --- NICKNAME / SPECIES ---
+    # NICKNAME / SPECIES
     nickname = None
     species = None
 
-    # Format: Nick (Species)
     if "(" in left and left.endswith(")"):
         nickname = left.split("(", 1)[0].strip()
         species = left[left.find("(") + 1 : -1].strip()
     else:
         species = left
 
-    # --- Stats ---
     ability = None
     nature = None
     tera_type = None
@@ -85,19 +78,14 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     for line in lines[1:]:
         if line.startswith("Ability:"):
             ability = line.split(":", 1)[1].strip()
-
         elif line.startswith("EVs:"):
             evs = parse_evs_or_ivs(line)
-
         elif line.startswith("IVs:"):
             ivs = parse_evs_or_ivs(line)
-
         elif line.startswith("Tera Type:"):
             tera_type = line.split(":", 1)[1].strip()
-
         elif line.endswith("Nature"):
             nature = line.replace("Nature", "").strip()
-
         elif line.startswith("- "):
             moves.append(line[2:].strip())
 
@@ -121,33 +109,30 @@ def parse_showdown_team(paste: str) -> List[Dict[str, Any]]:
     for line in paste.splitlines():
         stripped = line.strip()
 
-        # remove blank dot-commands
-        if stripped.startswith(".") and len(stripped) <= 4:
+        # Remove standalone commands (.rs, .S, etc.)
+        if stripped.startswith(".") and len(stripped.split()) == 1:
             continue
 
         cleaned_lines.append(line)
 
     cleaned = "\n".join(cleaned_lines)
 
-    # split Pokémon blocks by blank lines
+    # split blocks
     blocks = re.split(r"\n\s*\n", cleaned.strip())
 
     team: List[Dict[str, Any]] = []
 
     for block in blocks:
-        # Skip blocks that are just labels or garbage like ".rs Veil Team"
         first_line = block.strip().split("\n", 1)[0].strip()
 
-        # skip if it begins with a dot-command
+        # ignore ANY block starting with "."
         if first_line.startswith("."):
             continue
 
-        # skip if it contains no item, no ability, no nature, no dash lines
-        if ("@" not in block) and ("Ability:" not in block) and ("Nature" not in block):
-            continue
-
         mon = parse_pokemon_block(block)
-        if mon.get("species"):
+
+        # Only keep valid mons
+        if mon.get("species") and mon.get("moves"):
             team.append(mon)
 
     return team
