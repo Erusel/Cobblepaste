@@ -92,6 +92,50 @@ def create_app():
         # Redirect to the pretty view
         return redirect(url_for("view_paste", slug=slug))
 
+    @app.post("/api/create")
+    def api_create_paste():
+        data = request.json
+
+        if not data:
+            return {"error": "Missing JSON body"}, 400
+
+        title = data.get("title", "Untitled team")
+        author = data.get("author", "API User")
+        notes = data.get("notes", "")
+        raw_paste = data.get("paste", "")
+        competitive_mode = bool(data.get("competitive_mode", False))
+
+        if not raw_paste.strip():
+            return {"error": "Missing 'paste' field"}, 400
+
+        try:
+            team = parse_showdown_team(raw_paste)
+        except Exception as e:
+            return {"error": f"Parse error: {e}"}, 400
+
+        slug = "".join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+
+        paste = Paste(
+            slug=slug,
+            title=title,
+            author=author,
+            notes=notes,
+            raw_paste=raw_paste,
+            team_json=json.dumps(team),
+            competitive_mode=competitive_mode,
+            created_at=dt.datetime.utcnow(),
+        )
+
+        db.session.add(paste)
+        db.session.commit()
+
+        return {
+            "success": True,
+            "slug": slug,
+            "url": url_for("view_paste", slug=slug, _external=True),
+        }, 200
+
+
     @app.get("/<slug>")
     def view_paste(slug):
         paste = Paste.query.filter_by(slug=slug).first()
@@ -110,6 +154,8 @@ def create_app():
         return render_template("404.html"), 404
 
     return app
+
+
 
 
 app = create_app()
