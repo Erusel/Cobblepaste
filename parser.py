@@ -33,30 +33,25 @@ def parse_pokemon_block(block: str) -> Dict[str, Any]:
     if not lines:
         return {}
 
-    # CLEAN HEADER (.rs, .rv, .s etc.)
-    header = lines[0].lstrip()
+    # HEADER
+    header = lines[0]
+
+    # If header still contains a dot-command, just remove it, NOT the block
     if header.startswith("."):
-        return {}  # hard skip any command header
-
-    # Strip leading dot-tags inside nickname
-    if header.lower().startswith(".rs "):
-        header = header[4:].lstrip()
-    if header.lower().startswith(".rv "):
-        header = header[4:].lstrip()
-    if header.lower().startswith(".s "):
-        header = header[3:].lstrip()
-
-    lines[0] = header
+        # remove only the first line
+        lines = lines[1:]
+        if not lines:
+            return {}
+        header = lines[0]
 
     # ITEM
     item = None
-    first = lines[0]
-    if "@" in first:
-        left, item = first.split("@", 1)
+    if "@" in header:
+        left, item = header.split("@", 1)
         left = left.strip()
         item = item.strip()
     else:
-        left = first.strip()
+        left = header.strip()
 
     # NICKNAME / SPECIES
     nickname = None
@@ -109,8 +104,8 @@ def parse_showdown_team(paste: str) -> List[Dict[str, Any]]:
     for line in paste.splitlines():
         stripped = line.strip()
 
-        # Remove standalone commands (.rs, .S, etc.)
-        if stripped.startswith(".") and len(stripped.split()) == 1:
+        # Remove ANY dot-command line regardless of content
+        if stripped.startswith("."):
             continue
 
         cleaned_lines.append(line)
@@ -123,15 +118,9 @@ def parse_showdown_team(paste: str) -> List[Dict[str, Any]]:
     team: List[Dict[str, Any]] = []
 
     for block in blocks:
-        first_line = block.strip().split("\n", 1)[0].strip()
-
-        # ignore ANY block starting with "."
-        if first_line.startswith("."):
-            continue
-
         mon = parse_pokemon_block(block)
 
-        # Only keep valid mons
+        # Valid mon = species + at least 1 move
         if mon.get("species") and mon.get("moves"):
             team.append(mon)
 
